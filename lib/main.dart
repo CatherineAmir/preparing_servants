@@ -101,13 +101,19 @@ class _FancyFormScreenState extends State<FancyFormScreen> {
       );
     }
   }
-  void _openWebView(){
-    Navigator.push(
+  Future <void> _openWebView () async{
+    final result=await Navigator.push(
       context,
       MaterialPageRoute(
         builder:(context)=> FlexiQuizWebView(url:_webUrl)
       )
+
     );
+
+    setState(() {
+      _showWebViewButton=false;
+    });
+
   }
   @override
   Widget build(BuildContext context) {
@@ -121,11 +127,18 @@ class _FancyFormScreenState extends State<FancyFormScreen> {
         elevation: 0,
       ),
       body: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(15.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
 
           children: [
+            Image.asset(
+              'assets/images/logo.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.contain,
+            ),
+            SizedBox(height: 15,),
             if(!_showWebViewButton)
             // First Text Field
             TextField(

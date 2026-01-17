@@ -33,10 +33,15 @@ class _FlexiQuizWebViewState extends State<FlexiQuizWebView>
         print("screenshot in ios");
         // screenshotCallback.addListener(() {
         //   _showScreenshotWarning();
+        protectScreen();
       }
     } catch (e) {
       print('Error enabling screen protection: $e');
     }
+  }
+  Future<void> protectScreen() async {
+    // Prevent screenshots & screen recording
+    await ScreenProtector.preventScreenshotOn();
   }
 
   void _onScreenshotDetected() {
@@ -64,6 +69,7 @@ class _FlexiQuizWebViewState extends State<FlexiQuizWebView>
     WidgetsBinding.instance.addObserver(this);
     _initializeWebView();
     _enableScreenProtection();
+    protectScreen();
   }
 
   @override
@@ -84,90 +90,64 @@ class _FlexiQuizWebViewState extends State<FlexiQuizWebView>
       ..loadRequest(Uri.parse(widget.url));
   }
 
-  // Future<void> _enableScreenProtection() async {
-  //   try {
-  //     // Prevent screenshots on Android
-  //     if (Platform.isAndroid) {
-  //       await ScreenProtector.preventScreenshotOn();
-  //     }
-  //
-  //     // Protect data leakage (blurs app in app switcher on iOS/Android)
-  //     await ScreenProtector.protectDataLeakageOn();
-  //
-  //     // iOS: Enable screenshot detection
-  //     if (Platform.isIOS) {
-  //       ScreenProtector.addScreenshotObserver(() {
-  //         _onScreenshotDetected();
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Error enabling screen protection: $e');
-  //   }
-  // }
-
-  // void _onScreenshotDetected() {
-  //   if (!mounted) return;
-  //
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Screenshot Detected'),
-  //       content: const Text('Screenshots are not allowed on this screen.'),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text('OK'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text(
-            'Preparing Servants',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
+    return PopScope(
+      onPopInvokedWithResult:(didPop, result) {
+      if (didPop) return; // already popped, do nothing
 
-        backgroundColor: Colors.deepPurple,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: controller),
-          if (_showSecurityOverlay)
-            Container(
-              color: Colors.black,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.security, size: 100, color: Colors.white),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Secure Content Protected',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+      Navigator.pop(context, false);
+
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Center(
+            child: Text(
+              'Preparing Servants',
+              style: TextStyle(color: Colors.white),
+            ),
+
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.white, // back arrow color
+          ),
+      
+          backgroundColor: Colors.deepPurple,
+          elevation: 0,
+        ),
+        body: Stack(
+          children: [
+            WebViewWidget(controller: controller),
+            if (_showSecurityOverlay)
+              Container(
+                color: Colors.black,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.security, size: 100, color: Colors.white),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Secure Content Protected',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      Platform.isAndroid
-                          ? 'Screenshots are blocked'
-                          : 'Content hidden during screenshot',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      Text(
+                        Platform.isAndroid
+                            ? 'Screenshots are blocked'
+                            : 'Content hidden during screenshot',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
